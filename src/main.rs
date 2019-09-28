@@ -2,6 +2,7 @@
 mod circuit;
 mod circuit_simulator;
 mod logic_gates;
+mod parser;
 mod tests;
 
 fn main() {
