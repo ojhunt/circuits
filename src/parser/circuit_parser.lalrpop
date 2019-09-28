@@ -1,0 +1,22 @@
+use crate::parser::ast::*;
+
+grammar;
+
+pub Id: Ident = { 
+    r"[a-zA-Z_][a-zA-Z_0-9]*" => Ident::new(<>)
+}
+
+pub Circuit : String = {
+    "circuit" <id:Id> ("<"  ">")? => "circuit".into()
+}
+
+pub Literal : Expression = {
+    r"0[bB][01]+" => Expression::Literal((<>)[2..].chars().map(|a| a == '1').collect())
+}
+
+pub Expr : Expression = {
+    <id:Id> => Expression::Resolve(id),
+    <e:Expr> "." <id:Id> => Expression::DotAccess(Box::new(e), id),
+    <e:Expr> "[" <subscript:Expr> "]" => Expression::BracketAccess(Box::new(e), Box::new(subscript)),
+    Literal => <>,
+}
