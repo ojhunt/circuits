@@ -6,8 +6,26 @@ pub Id: Ident = {
     r"[a-zA-Z_][a-zA-Z_0-9]*" => Ident::new(<>)
 }
 
-pub Circuit : String = {
-    "circuit" <id:Id> ("<"  ">")? => "circuit".into()
+Comma<T>: Vec<T> = { // (1)
+    <v:(<T> ",")*> <e:T?> => match e { // (2)
+        None => v,
+        Some(e) => {
+            let mut v = v;
+            v.push(e);
+            v
+        }
+    }
+};
+
+pub TypeParameter : TypeParameter = {
+    //<id:Id> => TypeParameter{name: id, constraints: None),
+    <id:Id> <constraint: (":" <TypeRef>)?> => TypeParameter::new(id, constraint)
+}
+
+pub Circuit : Circuit = {
+    "circuit" <id:Id> <parameters: ("<" <Comma<TypeParameter>> ">")?> "{" <declarations: Declaration*> "}" => {
+        Circuit::new(id, parameters, declarations)
+    }
 }
 
 pub Literal : Expression = {
@@ -24,4 +42,20 @@ pub Expr : Expression = {
     Literal => <>,
 }
 
-pub Program : () = {}
+pub TypeRef : TypeRef = {
+    Id => TypeRef::Resolve(<>),
+    <base: TypeRef> "<" <parameters: Comma<Expr>> ">" => TypeRef::Apply(Box::new(base), parameters),
+    <base: TypeRef> "::" <id: Id> => TypeRef::Nested(Box::new(base), id)
+
+}
+
+pub Declaration : Declaration = {
+    Circuit => Declaration::Circuit(Box::new(<>)),
+    "type" <id:Id> <parameters: ("<" <Comma<TypeParameter>> ">")?> "=" <ty: TypeRef> => Declaration::TypeAlias(id, parameters.unwrap_or(Vec::new()), ty)
+}
+
+pub Module : Module = {
+    "module" <id:Id> ";" <declarations: Declaration*> => {
+        Module::new(id, declarations)
+    }
+}

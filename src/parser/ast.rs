@@ -7,7 +7,12 @@ impl Ident {
     }
 }
 
-pub enum TypeRef {}
+#[derive(Debug)]
+pub enum TypeRef {
+    Resolve(Ident),
+    Apply(Box<TypeRef>, Vec<Expression>),
+    Nested(Box<TypeRef>, Ident),
+}
 
 #[derive(Debug)]
 pub enum Expression {
@@ -19,12 +24,58 @@ pub enum Expression {
     BinaryExpression(Ident, Box<Expression>, Box<Expression>),
 }
 
-pub struct CircuitArgument(Box<Expression>);
-pub struct CircuitParameter(Ident, Option<TypeRef>);
-
-struct Circuit {
-    name: String,
-    parameters: Vec<CircuitParameter>,
+#[derive(Debug)]
+pub enum Declaration {
+    Circuit(Box<Circuit>),
+    TypeAlias(Ident, Vec<TypeParameter>, TypeRef),
 }
 
-pub struct Program {}
+#[derive(Debug)]
+pub struct TypeArgument {
+    expr: Box<Expression>,
+}
+
+#[derive(Debug)]
+pub struct TypeParameter {
+    name: Ident,
+    constraints: Option<TypeRef>,
+}
+
+impl TypeParameter {
+    pub fn new(name: Ident, constraints: Option<TypeRef>) -> Self {
+        return Self { name, constraints };
+    }
+}
+
+#[derive(Debug)]
+pub struct Circuit {
+    name: Ident,
+    parameters: Vec<TypeParameter>,
+    declarations: Vec<Declaration>,
+}
+
+impl Circuit {
+    pub fn new(
+        name: Ident,
+        parameters: Option<Vec<TypeParameter>>,
+        declarations: Vec<Declaration>,
+    ) -> Self {
+        return Self {
+            name,
+            parameters: parameters.unwrap_or(Vec::new()),
+            declarations,
+        };
+    }
+}
+
+#[derive(Debug)]
+pub struct Module {
+    name: Ident,
+    declarations: Vec<Declaration>,
+}
+
+impl Module {
+    pub fn new(name: Ident, declarations: Vec<Declaration>) -> Self {
+        return Self { name, declarations };
+    }
+}

@@ -15,12 +15,37 @@ mod test {
         assert!(!parser.parse("1foo").is_ok());
     }
 
+    macro_rules! parser_test {
+        ($testname: ident, $type: ty, $txt: expr, $expected: expr) => {
+            #[test]
+            pub fn $testname() {
+                let parser = <$type>::new();
+                let expected = $expected;
+                assert_eq!(&format!("{:?}", parser.parse($txt).unwrap()), expected);
+            }
+        };
+    }
+
+    parser_test!(
+        test_circuit,
+        circuit_parser::CircuitParser,
+        "circuit Foo{}",
+        "Circuit { name: Ident(\"Foo\"), parameters: [], declarations: [] }"
+    );
+    parser_test!(
+        test_circuit_params,
+        circuit_parser::CircuitParser,
+        "circuit Foo<A:int>{}",
+        "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [] }"
+    );
+
     #[test]
     pub fn circuit_test() {
         let parser = circuit_parser::CircuitParser::new();
         assert!(!parser.parse("").is_ok());
-        assert!(parser.parse("circuit Foo").is_ok());
-        assert!(parser.parse("circuit Foo<>").is_ok());
+        assert!(!parser.parse("circuit Foo").is_ok());
+        assert!(!parser.parse("circuit Foo<>").is_ok());
+        assert!(parser.parse("circuit Foo{circuit Bar<a>{}}").is_ok());
     }
 
     macro_rules! binary_string_test {

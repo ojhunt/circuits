@@ -7,5 +7,5 @@ mod parser;
 mod test;
 
 pub fn parse(test: &str) {
-    let _ = circuit_parser::ProgramParser::new().parse(test);
+    let _ = circuit_parser::ModuleParser::new().parse(test);
 }
