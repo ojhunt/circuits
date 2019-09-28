@@ -1,8 +1,7 @@
 mod ast;
+mod circuit_parser;
 mod lexer;
 mod parser;
-
-lalrpop_mod!(circuit_grammar, "/parser/circuit.rs");
 
 #[test]
 pub fn identifier_test() {
