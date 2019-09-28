@@ -1,30 +1,30 @@
-
 type IndexType = u32;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Sink(IndexType);
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Source(IndexType);
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Wire(IndexType);
 
 pub trait CircuitElement {
     fn step(&self, evaluator: &CircuitState, new_state: &mut CircuitState);
     fn set_input(&mut self, index: usize, input: Source);
     fn get_output(&self, index: usize) -> Source;
+    fn get_input(&self, index: usize) -> Source;
     fn input_count(&self) -> usize;
     fn output_count(&self) -> usize;
 }
 
 pub struct CircuitState {
-    state: Vec<bool>
+    state: Vec<bool>,
 }
 
 impl CircuitState {
     fn new(size: u32) -> Self {
         return CircuitState {
-            state: vec![false; size as usize]
-        }
+            state: vec![false; size as usize],
+        };
     }
 
     pub fn get(&self, Source(s): Source) -> bool {
@@ -43,8 +43,12 @@ pub struct Circuit {
 }
 
 impl Wire {
-    pub fn source(self) -> Source { return Source(self.0) }
-    pub fn sink(self) -> Sink { return Sink(self.0) }
+    pub fn source(self) -> Source {
+        return Source(self.0);
+    }
+    pub fn sink(self) -> Sink {
+        return Sink(self.0);
+    }
 }
 struct Constant(Wire, bool);
 impl CircuitElement for Constant {
@@ -58,13 +62,18 @@ impl CircuitElement for Constant {
         assert_eq!(index, 0);
         return self.0.source();
     }
-    fn input_count(&self) -> usize { return 0; }
+    fn get_input(&self, _: usize) -> Source {
+        panic!()
+    }
+    fn input_count(&self) -> usize {
+        return 0;
+    }
     fn output_count(&self) -> usize {
         return 1;
     }
 }
 
-pub trait UnaryOutputElement : CircuitElement {
+pub trait UnaryOutputElement: CircuitElement {
     fn new() -> Self;
 }
 
@@ -75,7 +84,6 @@ impl Circuit {
     pub fn new() -> Self {
         let low = Box::new(Constant(Wire(0), false));
         let high = Box::new(Constant(Wire(1), true));
-        
         return Circuit {
             low: low.get_output(0),
             high: high.get_output(0),
@@ -99,11 +107,11 @@ impl Circuit {
     }
 
     pub fn low(&self) -> Source {
-        return self.low
+        return self.low;
     }
 
     pub fn high(&self) -> Source {
-        return self.high
+        return self.high;
     }
 
     pub fn elements(&self) -> &[Box<dyn CircuitElement>] {
@@ -116,12 +124,11 @@ impl Circuit {
         return ElementRef(result);
     }
 
-    pub fn setElementInput(&mut self, ElementRef(e): ElementRef, index: usize, input:Source) {
+    pub fn setElementInput(&mut self, ElementRef(e): ElementRef, index: usize, input: Source) {
         self.m_elements[e].set_input(index, input);
     }
 
-    pub fn getElementOutput(&self, ElementRef(e):ElementRef, index: usize) -> Source {
+    pub fn getElementOutput(&self, ElementRef(e): ElementRef, index: usize) -> Source {
         return self.m_elements[e].get_output(index);
     }
 }
-
