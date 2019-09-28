@@ -27,26 +27,26 @@ pub fn literal_test() {
     assert!(!parser.parse("0b").is_ok());
     assert_eq!(
         &format!("{:?}", parser.parse("0b0").unwrap()),
-        "Literal([false])"
+        "Vector([false])"
     );
     assert_eq!(
         &format!("{:?}", parser.parse("0b1").unwrap()),
-        "Literal([true])"
+        "Vector([true])"
     );
     assert_eq!(
         &format!("{:?}", parser.parse("0b00").unwrap()),
-        "Literal([false, false])"
+        "Vector([false, false])"
     );
     assert_eq!(
         &format!("{:?}", parser.parse("0b10").unwrap()),
-        "Literal([true, false])"
+        "Vector([true, false])"
     );
     assert_eq!(
         &format!("{:?}", parser.parse("0b11").unwrap()),
-        "Literal([true, true])"
+        "Vector([true, true])"
     );
     assert_eq!(
         &format!("{:?}", parser.parse("0b01").unwrap()),
-        "Literal([false, true])"
+        "Vector([false, true])"
     );
 }

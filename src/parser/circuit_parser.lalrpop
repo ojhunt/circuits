@@ -11,7 +11,10 @@ pub Circuit : String = {
 }
 
 pub Literal : Expression = {
-    r"0[bB][01]+" => Expression::Literal((<>)[2..].chars().map(|a| a == '1').collect())
+    r"0[bB][01]+" => Expression::Vector((<>)[2..].chars().map(|a| a == '1').collect()),
+    r"0[xX][0-9a-f]+" => {
+        Expression::Integer(usize::from_str_radix(&(<>)[2..], 16).unwrap())
+    }
 }
 
 pub Expr : Expression = {
@@ -20,3 +23,5 @@ pub Expr : Expression = {
     <e:Expr> "[" <subscript:Expr> "]" => Expression::BracketAccess(Box::new(e), Box::new(subscript)),
     Literal => <>,
 }
+
+pub Program : () = {}

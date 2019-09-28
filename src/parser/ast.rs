@@ -14,7 +14,8 @@ pub enum Expression {
     Resolve(Ident),
     DotAccess(Box<Expression>, Ident),
     BracketAccess(Box<Expression>, Box<Expression>),
-    Literal(Vec<bool>),
+    Vector(Vec<bool>),
+    Integer(usize),
     BinaryExpression(Ident, Box<Expression>, Box<Expression>),
 }
 
@@ -25,3 +26,5 @@ struct Circuit {
     name: String,
     parameters: Vec<CircuitParameter>,
 }
+
+pub struct Program {}
