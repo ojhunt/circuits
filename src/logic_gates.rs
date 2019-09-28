@@ -38,7 +38,7 @@ impl NotGate {
     pub fn new(circuit: &mut Circuit) -> Self {
         return NotGate {
             src: circuit.low(),
-            output: circuit.addWire(),
+            output: circuit.add_wire(),
         };
     }
 }
@@ -52,7 +52,7 @@ impl AndGate {
     pub fn new(circuit: &mut Circuit, width: usize) -> Self {
         return Self {
             sources: vec![circuit.low(); width],
-            output: circuit.addWire(),
+            output: circuit.add_wire(),
         };
     }
 }
@@ -93,7 +93,7 @@ impl NandGate {
     pub fn new(circuit: &mut Circuit, width: usize) -> Self {
         return Self {
             sources: vec![circuit.low(); width],
-            output: circuit.addWire(),
+            output: circuit.add_wire(),
         };
     }
 }
@@ -137,7 +137,7 @@ impl XorGate {
     pub fn new(circuit: &mut Circuit) -> Self {
         return Self {
             sources: [circuit.low(); 2],
-            output: circuit.addWire(),
+            output: circuit.add_wire(),
         };
     }
 }

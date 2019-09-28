@@ -1,4 +1,6 @@
-macro_rules! nary_gate_test {
+#[cfg(test)]
+mod test {
+    macro_rules! nary_gate_test {
     ($testname:ident, $gate_type:ident, $left: ident, $right:ident, $op:expr $(, $tail:expr)*) => {
         #[test]
         fn $testname() {
@@ -17,11 +19,11 @@ macro_rules! nary_gate_test {
                         gate.set_input(0, if $left { high } else { low });
                         gate.set_input(1, if $right { high } else { low });
                         let output = gate.get_output(0);
-                        let g = circuit.addElement(gate);
+                        circuit.add_element(gate);
                         let mut simulator = CircuitSimulator::new(circuit);
                         simulator.step();
                         simulator.step();
-                        let result = simulator.readPoint(output);
+                        let result = simulator.read_point(output);
                         assert_eq!(result, $op);
                     }
                 }
@@ -30,6 +32,7 @@ macro_rules! nary_gate_test {
     };
 }
 
-nary_gate_test!(test_xor, XorGate, left, right, left ^ right);
-nary_gate_test!(test_and, AndGate, left, right, left && right, 2);
-nary_gate_test!(test_nand, NandGate, left, right, !(left && right), 2);
+    nary_gate_test!(test_xor, XorGate, left, right, left ^ right);
+    nary_gate_test!(test_and, AndGate, left, right, left && right, 2);
+    nary_gate_test!(test_nand, NandGate, left, right, !(left && right), 2);
+}

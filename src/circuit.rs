@@ -92,11 +92,11 @@ impl Circuit {
         };
     }
 
-    pub fn createState(&self) -> CircuitState {
+    pub fn create_state(&self) -> CircuitState {
         return CircuitState::new(self.m_value_count);
     }
 
-    pub fn addWire(&mut self) -> Wire {
+    pub fn add_wire(&mut self) -> Wire {
         let result = Wire(self.m_value_count);
         self.m_value_count += 1;
         return result;
@@ -118,17 +118,17 @@ impl Circuit {
         return &self.m_elements;
     }
 
-    pub fn addElement<E: 'static + CircuitElement>(&mut self, elem: E) -> ElementRef {
-        let result = (self.m_elements.len());
+    pub fn add_element<E: 'static + CircuitElement>(&mut self, elem: E) -> ElementRef {
+        let result = self.m_elements.len();
         self.m_elements.push(Box::new(elem));
         return ElementRef(result);
     }
 
-    pub fn setElementInput(&mut self, ElementRef(e): ElementRef, index: usize, input: Source) {
+    pub fn set_element_input(&mut self, ElementRef(e): ElementRef, index: usize, input: Source) {
         self.m_elements[e].set_input(index, input);
     }
 
-    pub fn getElementOutput(&self, ElementRef(e): ElementRef, index: usize) -> Source {
+    pub fn get_element_output(&self, ElementRef(e): ElementRef, index: usize) -> Source {
         return self.m_elements[e].get_output(index);
     }
 }
