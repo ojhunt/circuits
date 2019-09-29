@@ -38,6 +38,22 @@ mod test {
         "circuit Foo<A:int>{}",
         "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [] }"
     );
+    parser_test!(
+        test_basic_alias,
+        circuit_parser::CircuitParser,
+        "circuit Foo<A:int>{
+            type F = Foo
+        }",
+       "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [], Resolve(Ident(\"Foo\")))] }"
+    );
+    parser_test!(
+        test_basic_alias2,
+        circuit_parser::CircuitParser,
+        "circuit Foo<A:int>{
+            type F = Foo<i>
+        }",
+       "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [], Resolve(Ident(\"Foo\")))] }"
+    );
 
     #[test]
     pub fn circuit_test() {

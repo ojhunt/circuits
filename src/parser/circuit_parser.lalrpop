@@ -18,7 +18,6 @@ Comma<T>: Vec<T> = { // (1)
 };
 
 pub TypeParameter : TypeParameter = {
-    //<id:Id> => TypeParameter{name: id, constraints: None),
     <id:Id> <constraint: (":" <TypeRef>)?> => TypeParameter::new(id, constraint)
 }
 
@@ -38,7 +37,12 @@ pub Literal : Expression = {
 pub Expr : Expression = {
     <id:Id> => Expression::Resolve(id),
     <e:Expr> "." <id:Id> => Expression::DotAccess(Box::new(e), id),
-    <e:Expr> "[" <subscript:Expr> "]" => Expression::BracketAccess(Box::new(e), Box::new(subscript)),
+    <e:Expr> "[" <subscript:Expr> "]" => 
+        Expression::BracketAccess(Box::new(e), Box::new(subscript)),
+    <base:Expr> "<" <parameters: Comma<Expr>> ">" => 
+        Expression::TypeApplication(Box::new(base), parameters),
+    <base:Expr> "::" <property: Id> ">" => 
+        Expression::Nested(Box::new(base), property),
     Literal => <>,
 }
 

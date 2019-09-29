@@ -22,6 +22,8 @@ pub enum Expression {
     Vector(Vec<bool>),
     Integer(usize),
     BinaryExpression(Ident, Box<Expression>, Box<Expression>),
+    TypeApplication(Box<Expression>, Vec<Expression>),
+    Nested(Box<Expression>, Ident),
 }
 
 #[derive(Debug)]
