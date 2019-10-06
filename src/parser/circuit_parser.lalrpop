@@ -50,7 +50,6 @@ pub TypeRef : TypeRef = {
     Id => TypeRef::Resolve(<>),
     <base: TypeRef> "<" <parameters: Comma<Expr>> ">" => TypeRef::Apply(Box::new(base), parameters),
     <base: TypeRef> "::" <id: Id> => TypeRef::Nested(Box::new(base), id)
-
 }
 
 pub Declaration : Declaration = {

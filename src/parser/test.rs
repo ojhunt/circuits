@@ -50,9 +50,9 @@ mod test {
         test_basic_alias2,
         circuit_parser::CircuitParser,
         "circuit Foo<A:int>{
-            type F = Foo<i>
+            type F<i:Foo> = Foo<i, A>
         }",
-       "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [], Resolve(Ident(\"Foo\")))] }"
+       "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [TypeParameter { name: Ident(\"i\"), constraints: Some(Resolve(Ident(\"Foo\"))) }], Apply(Resolve(Ident(\"Foo\")), [Resolve(Ident(\"i\")), Resolve(Ident(\"A\"))]))] }"
     );
 
     #[test]
