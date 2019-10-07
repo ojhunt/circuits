@@ -20,7 +20,7 @@ struct ParseError {
 impl std::fmt::Display for ParseError {
     fn fmt(
         &self,
-        formatter: &mut std::fmt::Formatter<'_>,
+        _formatter: &mut std::fmt::Formatter<'_>,
     ) -> std::result::Result<(), std::fmt::Error> {
         return Ok(());
     }

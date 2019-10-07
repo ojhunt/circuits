@@ -8,11 +8,11 @@ impl Ident {
 }
 
 #[derive(Debug)]
-pub enum TypeRef {
+pub enum TypeReference {
     Resolve(Ident),
-    Apply(Box<TypeRef>, Vec<Expression>),
-    Nested(Box<TypeRef>, Ident),
-    Bus(Box<TypeRef>, Box<Expression>),
+    Apply(Box<TypeReference>, Vec<TypeArgument>),
+    Access(Box<TypeReference>, Ident),
+    Bus(Option<Box<TypeReference>>, Box<Expression>),
 }
 
 #[derive(Debug)]
@@ -23,10 +23,10 @@ pub enum Expression {
     Vector(Vec<bool>),
     Integer(usize),
     BinaryExpression(Ident, Box<Expression>, Box<Expression>),
-    TypeApplication(Box<Expression>, Vec<Expression>),
     Nested(Box<Expression>, Ident),
-    Compound(Box<Expression>, Vec<BinaryTail>),
+    Binary(Box<Expression>, Vec<BinaryTail>),
     Unary(Ident, Box<Expression>),
+    TypeAccess(Box<TypeReference>, Ident),
 }
 
 #[derive(Debug)]
@@ -37,29 +37,30 @@ pub struct BinaryTail {
 
 #[derive(Debug)]
 pub enum IOPort {
-    In(Ident, TypeRef),
-    Out(Ident, TypeRef),
+    In(Ident, TypeReference),
+    Out(Ident, TypeReference),
 }
 
 #[derive(Debug)]
 pub enum Declaration {
     Circuit(Box<Circuit>),
-    TypeAlias(Ident, Vec<TypeParameter>, TypeRef),
+    TypeAlias(Ident, Vec<TypeParameter>, TypeReference),
 }
 
 #[derive(Debug)]
-pub struct TypeArgument {
-    expr: Box<Expression>,
+pub enum TypeArgument {
+    Value(Box<Expression>),
+    Type(Box<TypeReference>),
 }
 
 #[derive(Debug)]
 pub struct TypeParameter {
     name: Ident,
-    constraints: Option<TypeRef>,
+    constraints: Option<TypeReference>,
 }
 
 impl TypeParameter {
-    pub fn new(name: Ident, constraints: Option<TypeRef>) -> Self {
+    pub fn new(name: Ident, constraints: Option<TypeReference>) -> Self {
         return Self { name, constraints };
     }
 }

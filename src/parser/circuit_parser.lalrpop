@@ -2,8 +2,14 @@ use crate::parser::ast::*;
 
 grammar;
 
-pub Id: Ident = { 
-    r"[a-zA-Z_][a-zA-Z_0-9]*" => Ident::new(<>)
+pub TypeName: Ident = {
+    r"[A-Z][a-zA-Z_0-9]*" => Ident::new(<>),
+    r"_[A-Z][a-zA-Z_0-9]*" => Ident::new(<>),
+}
+
+pub VariableName: Ident = {
+    r"[a-z][a-zA-Z_0-9]*" => Ident::new(<>),
+    r"_[a-z][a-zA-Z_0-9]*" => Ident::new(<>),
 }
 
 Comma<T>: Vec<T> = { // (1)
@@ -17,17 +23,31 @@ Comma<T>: Vec<T> = { // (1)
     }
 };
 
+pub TypeArgument : TypeArgument = {
+    <TypeReference> => TypeArgument::Type(Box::new(<>)),
+    <ExprNoLTGT> => TypeArgument::Value(Box::new(<>))
+}
+
+pub TypeReference : TypeReference = {
+    <TypeName> => TypeReference::Resolve(<>),
+    <base: TypeReference> "<" <parameters:Comma<TypeArgument>> ">" => TypeReference::Apply(Box::new(base), parameters),
+    <base: TypeReference> "::" <name: TypeName> => TypeReference::Access(Box::new(base), name),
+    "[" <Expr> "]" => TypeReference::Bus(None, Box::new(<>)),
+    <base: TypeReference>  "[" <subscript: Expr> "]" => TypeReference::Bus(Some(Box::new(base)), Box::new(subscript)),
+}
+
 pub TypeParameter : TypeParameter = {
-    <id:Id> <constraint: (":" <TypeRef>)?> => TypeParameter::new(id, constraint)
+    <id:TypeName> <constraint: (":" <TypeReference>)?> => TypeParameter::new(id, constraint),
+    <id:VariableName> <constraint: (":" <TypeReference>)> => TypeParameter::new(id, Some(constraint))
 }
 
 pub IOPort : IOPort = {
-    "in" <name:Id> ":" <ty: TypeRef> => IOPort::In(name, ty),
-    "out" <name:Id> ":" <ty: TypeRef> => IOPort::Out(name, ty),
+    "in" <name:VariableName> ":" <ty: TypeReference> => IOPort::In(name, ty),
+    "out" <name:VariableName> ":" <ty: TypeReference> => IOPort::Out(name, ty),
 }
 
 pub Circuit : Circuit = {
-    "circuit" <id:Id> <instance_parameters: ("<" <Comma<TypeParameter>> ">")?> <init_parameters: ("(" <Comma<IOPort>> ")")?> <constraints: ("where" <Expr>)?> "{" <declarations: Declaration*> "}" => {
+    "circuit" <id:TypeName> <instance_parameters: ("<" <Comma<TypeParameter>> ">")?> <init_parameters: ("(" <Comma<IOPort>> ")")?> <constraints: ("where" <Expr>)?> "{" <declarations: Declaration*> "}" => {
         Circuit::new(id, instance_parameters, declarations)
     }
 }
@@ -40,7 +60,7 @@ pub Literal : Expression = {
 }
 
 pub PrimaryExpression : Expression = {
-    <id:Id> => Expression::Resolve(id),
+    <id:VariableName> => Expression::Resolve(id),
     Literal => <>,
     "(" <expr:Expr> ")" => expr,
 }
@@ -49,44 +69,50 @@ pub MemberExpression : Expression = {
     PrimaryExpression => <>,
     <e:MemberExpression> "[" <subscript: Expr> "]" =>
         Expression::BracketAccess(Box::new(e), Box::new(subscript)),
-    <base:MemberExpression> "::" <property: Id> => 
-        Expression::Nested(Box::new(base), property),
-    <base:MemberExpression> "." <property: Id> => 
+    <base:TypeReference> "::" <property: VariableName> => 
+        Expression::TypeAccess(Box::new(base), property),
+    <base:MemberExpression> "." <property: VariableName> => 
         Expression::Nested(Box::new(base), property),
 }
 
-pub BinaryOperator : Ident = {
-    "`" <name: Id> "`" => name,
-    r"[!+-=<>@$%^&*]+" => Ident::new(<>)
+pub OperatorsNoLTGT : Ident = {
+    r"[!+-@$%^&*~]+" => Ident::new(<>),
 }
 
-pub UnaryExpr : Expression = {
+pub Operators : Ident = {
+    OperatorsNoLTGT => <>,
+    "<" => Ident::new(<>),
+    ">" => Ident::new(<>),
+}
+
+BinaryOperator<Operators> : Ident = {
+    "`" <name: VariableName> "`" => name,
+    Operators => <>,
+}
+
+UnaryExpr<Operators> : Expression = {
     <e: MemberExpression> => e,
-    <op: BinaryOperator> <e: MemberExpression> => Expression::Unary(op, Box::new(e))
+    <op: Operators> <e: MemberExpression> => Expression::Unary(op, Box::new(e))
 }
 
-pub BinaryTail : BinaryTail = {
-    <op:BinaryOperator> <e: UnaryExpr> => BinaryTail{operation: op, expression: e}
+BinaryTail<Operators> : BinaryTail = {
+    <op:Operators> <e: UnaryExpr<Operators>> => BinaryTail{operation: op, expression: e}
 }
+
 pub Expr : Expression = {
-    <base: UnaryExpr> => base,
-    <expr: UnaryExpr> <tail: (<BinaryTail>)+> => Expression::Compound(Box::new(expr), tail),
+    <expr: UnaryExpr<Operators>> <tail: (<BinaryTail<Operators>>)*> => Expression::Binary(Box::new(expr), tail),
 }
-
-pub TypeRef : TypeRef = {
-    Id => TypeRef::Resolve(<>),
-    <base: TypeRef> "<" <parameters: Comma<Expr>> ">" => TypeRef::Apply(Box::new(base), parameters),
-    <base: TypeRef> "::" <id: Id> => TypeRef::Nested(Box::new(base), id),
-    <base: TypeRef> "[" <value: Expr> "]" => TypeRef::Bus(Box::new(base), Box::new(value))
+pub ExprNoLTGT : Expression = {
+    <expr: UnaryExpr<OperatorsNoLTGT>> <tail: (<BinaryTail<OperatorsNoLTGT>>)*> => Expression::Binary(Box::new(expr), tail),
 }
 
 pub Declaration : Declaration = {
     Circuit => Declaration::Circuit(Box::new(<>)),
-    "type" <id:Id> <parameters: ("<" <Comma<TypeParameter>> ">")?> "=" <ty: TypeRef> => Declaration::TypeAlias(id, parameters.unwrap_or(Vec::new()), ty)
+    "type" <id:TypeName> <parameters: ("<" <Comma<TypeParameter>> ">")?> "=" <ty: TypeReference> => Declaration::TypeAlias(id, parameters.unwrap_or(Vec::new()), ty)
 }
 
 pub Module : Module = {
-    "module" <id:Id> ";" <declarations: Declaration*> => {
+    "module" <id:TypeName> ";" <declarations: Declaration*> => {
         Module::new(id, declarations)
     }
 }

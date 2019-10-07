@@ -1,13 +1,20 @@
 #[cfg(test)]
 mod test {
 
-    use crate::parser::ast::Expression;
-
     use crate::parser::circuit_parser;
 
-    pub fn identifier_test() {
-        let parser = circuit_parser::IdParser::new();
+    pub fn variable_test() {
+        let parser = circuit_parser::VariableNameParser::new();
         assert!(parser.parse("foo").is_ok());
+        assert_eq!(
+            &format!("{:?}", parser.parse(" foo").unwrap()),
+            "Ident(\"foo\")"
+        );
+        assert!(!parser.parse("1foo").is_ok());
+    }
+    pub fn typename_test() {
+        let parser = circuit_parser::TypeNameParser::new();
+        assert!(parser.parse("Foo").is_ok());
         assert_eq!(
             &format!("{:?}", parser.parse(" foo").unwrap()),
             "Ident(\"foo\")"
@@ -25,7 +32,19 @@ mod test {
             }
         };
     }
+    parser_test!(
+        test_variable,
+        circuit_parser::VariableNameParser,
+        "a_circuit",
+        "Ident(\"a_circuit\")"
+    );
 
+    parser_test!(
+        test_typename,
+        circuit_parser::TypeNameParser,
+        "Circuit",
+        "Ident(\"Circuit\")"
+    );
     parser_test!(
         test_circuit,
         circuit_parser::CircuitParser,
@@ -35,36 +54,36 @@ mod test {
     parser_test!(
         test_circuit_params,
         circuit_parser::CircuitParser,
-        "circuit Foo<A:int>{}",
-        "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [] }"
+        "circuit Foo<A:Int>{}",
+        "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"Int\"))) }], declarations: [] }"
     );
     parser_test!(
         test_basic_alias,
         circuit_parser::CircuitParser,
-        "circuit Foo<A:int>{
+        "circuit Foo<A:Int>{
             type F = Foo
         }",
-       "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [], Resolve(Ident(\"Foo\")))] }"
+        "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"Int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [], Resolve(Ident(\"Foo\")))] }"
     );
     parser_test!(
         test_basic_alias2,
         circuit_parser::CircuitParser,
-        "circuit Foo<A:int>{
+        "circuit Foo<A:Int>{
             type F<i:Foo> = Foo<i, A>
         }",
-       "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [TypeParameter { name: Ident(\"i\"), constraints: Some(Resolve(Ident(\"Foo\"))) }], Apply(Resolve(Ident(\"Foo\")), [Resolve(Ident(\"i\")), Resolve(Ident(\"A\"))]))] }"
-    );
-    parser_test!(
-        test_basic_unary_expression,
-        circuit_parser::ExprParser,
-        "a * b",
-       "Compound(Resolve(Ident(\"a\")), [BinaryTail { operation: Ident(\"*\"), expression: Resolve(Ident(\"b\")) }])"
+        "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"Int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [TypeParameter { name: Ident(\"i\"), constraints: Some(Resolve(Ident(\"Foo\"))) }], Apply(Resolve(Ident(\"Foo\")), [Value(Binary(Resolve(Ident(\"i\")), [])), Type(Resolve(Ident(\"A\")))]))] }"
     );
     parser_test!(
         test_basic_expression,
         circuit_parser::ExprParser,
+        "a < b",
+        "Binary(Resolve(Ident(\"a\")), [BinaryTail { operation: Ident(\"<\"), expression: Resolve(Ident(\"b\")) }])"
+    );
+    parser_test!(
+        test_basic_unary_expression,
+        circuit_parser::ExprParser,
         "* b",
-        "Unary(Ident(\"*\"), Resolve(Ident(\"b\")))"
+        "Binary(Unary(Ident(\"*\"), Resolve(Ident(\"b\"))), [])"
     );
 
     #[test]
@@ -73,7 +92,7 @@ mod test {
         assert!(!parser.parse("").is_ok());
         assert!(!parser.parse("circuit Foo").is_ok());
         assert!(!parser.parse("circuit Foo<>").is_ok());
-        assert!(parser.parse("circuit Foo{circuit Bar<a>{}}").is_ok());
+        assert!(parser.parse("circuit Foo{circuit Bar<A>{}}").is_ok());
     }
 
     macro_rules! binary_string_test {

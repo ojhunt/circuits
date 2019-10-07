@@ -5,7 +5,6 @@ mod logic_gates;
 mod parser;
 mod tests;
 
-#[macro_use]
 extern crate lalrpop_util;
 
 fn main() {
