@@ -12,6 +12,7 @@ pub enum TypeRef {
     Resolve(Ident),
     Apply(Box<TypeRef>, Vec<Expression>),
     Nested(Box<TypeRef>, Ident),
+    Bus(Box<TypeRef>, Box<Expression>),
 }
 
 #[derive(Debug)]
@@ -24,6 +25,20 @@ pub enum Expression {
     BinaryExpression(Ident, Box<Expression>, Box<Expression>),
     TypeApplication(Box<Expression>, Vec<Expression>),
     Nested(Box<Expression>, Ident),
+    Compound(Box<Expression>, Vec<BinaryTail>),
+    Unary(Ident, Box<Expression>),
+}
+
+#[derive(Debug)]
+pub struct BinaryTail {
+    pub operation: Ident,
+    pub expression: Expression,
+}
+
+#[derive(Debug)]
+pub enum IOPort {
+    In(Ident, TypeRef),
+    Out(Ident, TypeRef),
 }
 
 #[derive(Debug)]

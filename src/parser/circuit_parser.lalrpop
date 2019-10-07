@@ -21,9 +21,14 @@ pub TypeParameter : TypeParameter = {
     <id:Id> <constraint: (":" <TypeRef>)?> => TypeParameter::new(id, constraint)
 }
 
+pub IOPort : IOPort = {
+    "in" <name:Id> ":" <ty: TypeRef> => IOPort::In(name, ty),
+    "out" <name:Id> ":" <ty: TypeRef> => IOPort::Out(name, ty),
+}
+
 pub Circuit : Circuit = {
-    "circuit" <id:Id> <parameters: ("<" <Comma<TypeParameter>> ">")?> "{" <declarations: Declaration*> "}" => {
-        Circuit::new(id, parameters, declarations)
+    "circuit" <id:Id> <instance_parameters: ("<" <Comma<TypeParameter>> ">")?> <init_parameters: ("(" <Comma<IOPort>> ")")?> <constraints: ("where" <Expr>)?> "{" <declarations: Declaration*> "}" => {
+        Circuit::new(id, instance_parameters, declarations)
     }
 }
 
@@ -34,22 +39,45 @@ pub Literal : Expression = {
     }
 }
 
-pub Expr : Expression = {
+pub PrimaryExpression : Expression = {
     <id:Id> => Expression::Resolve(id),
-    <e:Expr> "." <id:Id> => Expression::DotAccess(Box::new(e), id),
-    <e:Expr> "[" <subscript:Expr> "]" => 
-        Expression::BracketAccess(Box::new(e), Box::new(subscript)),
-    <base:Expr> "<" <parameters: Comma<Expr>> ">" => 
-        Expression::TypeApplication(Box::new(base), parameters),
-    <base:Expr> "::" <property: Id> ">" => 
-        Expression::Nested(Box::new(base), property),
     Literal => <>,
+    "(" <expr:Expr> ")" => expr,
+}
+
+pub MemberExpression : Expression = {
+    PrimaryExpression => <>,
+    <e:MemberExpression> "[" <subscript: Expr> "]" =>
+        Expression::BracketAccess(Box::new(e), Box::new(subscript)),
+    <base:MemberExpression> "::" <property: Id> => 
+        Expression::Nested(Box::new(base), property),
+    <base:MemberExpression> "." <property: Id> => 
+        Expression::Nested(Box::new(base), property),
+}
+
+pub BinaryOperator : Ident = {
+    "`" <name: Id> "`" => name,
+    r"[!+-=<>@$%^&*]+" => Ident::new(<>)
+}
+
+pub UnaryExpr : Expression = {
+    <e: MemberExpression> => e,
+    <op: BinaryOperator> <e: MemberExpression> => Expression::Unary(op, Box::new(e))
+}
+
+pub BinaryTail : BinaryTail = {
+    <op:BinaryOperator> <e: UnaryExpr> => BinaryTail{operation: op, expression: e}
+}
+pub Expr : Expression = {
+    <base: UnaryExpr> => base,
+    <expr: UnaryExpr> <tail: (<BinaryTail>)+> => Expression::Compound(Box::new(expr), tail),
 }
 
 pub TypeRef : TypeRef = {
     Id => TypeRef::Resolve(<>),
     <base: TypeRef> "<" <parameters: Comma<Expr>> ">" => TypeRef::Apply(Box::new(base), parameters),
-    <base: TypeRef> "::" <id: Id> => TypeRef::Nested(Box::new(base), id)
+    <base: TypeRef> "::" <id: Id> => TypeRef::Nested(Box::new(base), id),
+    <base: TypeRef> "[" <value: Expr> "]" => TypeRef::Bus(Box::new(base), Box::new(value))
 }
 
 pub Declaration : Declaration = {

@@ -54,6 +54,18 @@ mod test {
         }",
        "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [TypeParameter { name: Ident(\"i\"), constraints: Some(Resolve(Ident(\"Foo\"))) }], Apply(Resolve(Ident(\"Foo\")), [Resolve(Ident(\"i\")), Resolve(Ident(\"A\"))]))] }"
     );
+    parser_test!(
+        test_basic_unary_expression,
+        circuit_parser::ExprParser,
+        "a * b",
+       "Compound(Resolve(Ident(\"a\")), [BinaryTail { operation: Ident(\"*\"), expression: Resolve(Ident(\"b\")) }])"
+    );
+    parser_test!(
+        test_basic_expression,
+        circuit_parser::ExprParser,
+        "* b",
+        "Unary(Ident(\"*\"), Resolve(Ident(\"b\")))"
+    );
 
     #[test]
     pub fn circuit_test() {
