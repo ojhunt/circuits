@@ -86,6 +86,18 @@ mod test {
         "Binary(Unary(Ident(\"*\"), Resolve(Ident(\"b\"))), [])"
     );
 
+    parser_test!(
+        paren_test,
+        circuit_parser::ExprParser,
+        "(b)",
+        "Binary(Binary(Resolve(Ident(\"b\")), []), [])"
+    );
+    parser_test!(
+        paren_plus_test,
+        circuit_parser::ExprParser,
+        "(b+a)",
+        "Binary(Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"+\"), expression: Resolve(Ident(\"a\")) }]), [])"
+    );
     #[test]
     pub fn circuit_test() {
         let parser = circuit_parser::CircuitParser::new();

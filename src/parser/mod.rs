@@ -37,6 +37,13 @@ pub fn parse<'a>(test: &str) -> Result<ast::Module, Box<dyn std::error::Error + 
                 location,
                 expected: _,
             } => Some(location),
+            lalrpop_util::ParseError::UnrecognizedToken {
+                token: (location, _, _),
+                expected: _,
+            } => {
+                println!("HERE: {:?}", location);
+                Some(location)
+            }
             _ => None,
         };
         let location = location.map(|location| {
