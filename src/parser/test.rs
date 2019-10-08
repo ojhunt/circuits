@@ -83,20 +83,32 @@ mod test {
         test_basic_unary_expression,
         circuit_parser::ExprParser,
         "* b",
-        "Binary(Unary(Ident(\"*\"), Resolve(Ident(\"b\"))), [])"
+        "Unary(Ident(\"*\"), Resolve(Ident(\"b\")))"
     );
 
     parser_test!(
         paren_test,
         circuit_parser::ExprParser,
         "(b)",
-        "Binary(Binary(Resolve(Ident(\"b\")), []), [])"
+        "Resolve(Ident(\"b\"))"
     );
     parser_test!(
         paren_plus_test,
         circuit_parser::ExprParser,
         "(b+a)",
-        "Binary(Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"+\"), expression: Resolve(Ident(\"a\")) }]), [])"
+        "Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"+\"), expression: Resolve(Ident(\"a\")) }])"
+    );
+    parser_test!(
+        lt_test,
+        circuit_parser::ExprParser,
+        "b<a+a",
+        "Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"<\"), expression: Resolve(Ident(\"a\")) }, BinaryTail { operation: Ident(\"+\"), expression: Resolve(Ident(\"a\")) }])"
+    );
+    parser_test!(
+        ltgt_test,
+        circuit_parser::ExprParser,
+        "b<a>+a",
+        "Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"<\"), expression: Resolve(Ident(\"a\")) }, BinaryTail { operation: Ident(\">+\"), expression: Resolve(Ident(\"a\")) }])"
     );
     #[test]
     pub fn circuit_test() {

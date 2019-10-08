@@ -100,7 +100,8 @@ BinaryTail<Operators> : BinaryTail = {
 }
 
 pub Expr : Expression = {
-    <expr: UnaryExpr<Operators>> <tail: (<BinaryTail<Operators>>)*> => Expression::Binary(Box::new(expr), tail),
+    <expr: UnaryExpr<Operators>> => expr,
+    <expr: UnaryExpr<Operators>> <tail: (<BinaryTail<Operators>>)+> => Expression::Binary(Box::new(expr), tail),
 }
 pub ExprNoLTGT : Expression = {
     <expr: UnaryExpr<OperatorsNoLTGT>> <tail: (<BinaryTail<OperatorsNoLTGT>>)*> => Expression::Binary(Box::new(expr), tail),
