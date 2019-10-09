@@ -108,7 +108,7 @@ mod test {
         ltgt_test,
         circuit_parser::ExprParser,
         "b<a>+a",
-        "Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"<\"), expression: Resolve(Ident(\"a\")) }, BinaryTail { operation: Ident(\">+\"), expression: Resolve(Ident(\"a\")) }])"
+        "Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"<\"), expression: Resolve(Ident(\"a\")) }, BinaryTail { operation: Ident(\">\"), expression: Unary(Ident(\"+\"), Resolve(Ident(\"a\"))) }])"
     );
     #[test]
     pub fn circuit_test() {
