@@ -25,7 +25,7 @@ Comma<T>: Vec<T> = { // (1)
 
 pub TypeArgument : TypeArgument = {
     <TypeReference> => TypeArgument::Type(Box::new(<>)),
-    <ExprNoLTGT> => TypeArgument::Value(Box::new(<>))
+    "(" <ExprNoLTGT> ")" => TypeArgument::Value(Box::new(<>))
 }
 
 pub TypeReference : TypeReference = {
@@ -76,13 +76,26 @@ pub MemberExpression : Expression = {
 }
 
 pub OperatorsNoLTGT : Ident = {
-    r"[!+-@$%^&*~]+" => Ident::new(<>),
+    "<" => Ident::new(<>),
+    "<<" => Ident::new(<>),
+    "<=" => Ident::new(<>),
+    ">" => Ident::new(<>),
+    ">=" => Ident::new(<>),
+    ">>" => Ident::new(<>),
+    ">>>" => Ident::new(<>),
+    "==" => Ident::new(<>),
+    "!=" => Ident::new(<>),
+    "*" => Ident::new(<>),
+    "/" => Ident::new(<>),
+    "%" => Ident::new(<>),
+    "+" => Ident::new(<>),
+    "-" => Ident::new(<>),
+    "~" => Ident::new(<>),
+    "!" => Ident::new(<>),
 }
 
 pub Operators : Ident = {
     OperatorsNoLTGT => <>,
-    "<" => Ident::new(<>),
-    ">" => Ident::new(<>),
 }
 
 BinaryOperator<Operators> : Ident = {
