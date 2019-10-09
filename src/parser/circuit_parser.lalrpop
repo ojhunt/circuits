@@ -25,7 +25,7 @@ Comma<T>: Vec<T> = { // (1)
 
 pub TypeArgument : TypeArgument = {
     <TypeReference> => TypeArgument::Type(Box::new(<>)),
-    "(" <ExprNoLTGT> ")" => TypeArgument::Value(Box::new(<>))
+    "(" <Expr> ")" => TypeArgument::Value(Box::new(<>))
 }
 
 pub TypeReference : TypeReference = {
@@ -54,9 +54,10 @@ pub Circuit : Circuit = {
 
 pub Literal : Expression = {
     r"0[bB][01]+" => Expression::Vector((<>)[2..].chars().map(|a| a == '1').collect()),
-    r"0[xX][0-9a-f]+" => {
-        Expression::Integer(usize::from_str_radix(&(<>)[2..], 16).unwrap())
-    }
+    r"0[xX][0-9a-f]+" => Expression::Integer(usize::from_str_radix(&(<>)[2..], 16).unwrap()),
+    r"0[oO][0-7]+" => Expression::Integer(usize::from_str_radix(&(<>)[2..], 8).unwrap()),
+    r"0" => Expression::Integer(0),
+    r"[1-9][0-9]*" => Expression::Integer(usize::from_str_radix(<>, 10).unwrap())
 }
 
 pub PrimaryExpression : Expression = {
@@ -75,49 +76,49 @@ pub MemberExpression : Expression = {
         Expression::Nested(Box::new(base), property),
 }
 
-pub OperatorsNoLTGT : Ident = {
-    "<" => Ident::new(<>),
-    "<<" => Ident::new(<>),
-    "<=" => Ident::new(<>),
-    ">" => Ident::new(<>),
-    ">=" => Ident::new(<>),
-    ">>" => Ident::new(<>),
-    ">>>" => Ident::new(<>),
-    "==" => Ident::new(<>),
-    "!=" => Ident::new(<>),
-    "*" => Ident::new(<>),
-    "/" => Ident::new(<>),
-    "%" => Ident::new(<>),
-    "+" => Ident::new(<>),
-    "-" => Ident::new(<>),
-    "~" => Ident::new(<>),
-    "!" => Ident::new(<>),
+BinaryOperator : BinaryOperator = {
+    "`" <name: VariableName> "`" => BinaryOperator::Named(name),
+    "<" => BinaryOperator::Less,
+    "<<" => BinaryOperator::LeftShift,
+    "<=" => BinaryOperator::LessEqual,
+    ">" => BinaryOperator::Greater,
+    ">=" => BinaryOperator::GreaterEqual,
+    ">>" => BinaryOperator::RightShift,
+    ">>>" => BinaryOperator::UnsignedRightShift,
+    "==" => BinaryOperator::Equal,
+    "!=" => BinaryOperator::NotEqual,
+    "*" => BinaryOperator::Times,
+    "/" => BinaryOperator::Divide,
+    "%" => BinaryOperator::Mod,
+    "+" => BinaryOperator::Plus,
+    "-" => BinaryOperator::Minus,
+    "|" => BinaryOperator::BitwiseOr,
+    "^" => BinaryOperator::BitwiseXor,
+    "&" => BinaryOperator::BitwiseAnd,
+    "||" => BinaryOperator::LogicalOr,
+    "^^" => BinaryOperator::LogicalXor,
+    "&&" => BinaryOperator::LogicalAnd,
 }
 
-pub Operators : Ident = {
-    OperatorsNoLTGT => <>,
+UnaryOperator : UnaryOperator = {
+    "+" => UnaryOperator::Plus,
+    "-" => UnaryOperator::Negate,
+    "!" => UnaryOperator::Not,
+    "~" => UnaryOperator::BitwiseNot,
 }
 
-BinaryOperator<Operators> : Ident = {
-    "`" <name: VariableName> "`" => name,
-    Operators => <>,
-}
-
-UnaryExpr<Operators> : Expression = {
+UnaryExpr : Expression = {
     <e: MemberExpression> => e,
-    <op: Operators> <e: MemberExpression> => Expression::Unary(op, Box::new(e))
+    <op: UnaryOperator> <e: MemberExpression> => Expression::Unary(op, Box::new(e))
 }
 
-BinaryTail<Operators> : BinaryTail = {
-    <op:Operators> <e: UnaryExpr<Operators>> => BinaryTail{operation: op, expression: e}
+BinaryTail : BinaryTail = {
+    <op:BinaryOperator> <e: UnaryExpr> => BinaryTail{operation: op, expression: e}
 }
 
 pub Expr : Expression = {
-    <expr: UnaryExpr<Operators>> => expr,
-    <expr: UnaryExpr<Operators>> <tail: (<BinaryTail<Operators>>)+> => Expression::Binary(Box::new(expr), tail),
-}
-pub ExprNoLTGT : Expression = {
-    <expr: UnaryExpr<OperatorsNoLTGT>> <tail: (<BinaryTail<OperatorsNoLTGT>>)*> => Expression::Binary(Box::new(expr), tail),
+    <expr: UnaryExpr> => expr,
+    <expr: UnaryExpr> <tail: (<BinaryTail>)+> => Expression::Binary(Box::new(expr), tail),
 }
 
 pub Declaration : Declaration = {

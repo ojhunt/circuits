@@ -16,22 +16,55 @@ pub enum TypeReference {
 }
 
 #[derive(Debug)]
+pub enum BinaryOperator {
+    Equal,
+    NotEqual,
+    Less,
+    LessEqual,
+    Greater,
+    GreaterEqual,
+    Times,
+    Divide,
+    Multiply,
+    Mod,
+    Plus,
+    Minus,
+    LogicalAnd,
+    LogicalOr,
+    LogicalXor,
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXor,
+    LeftShift,
+    RightShift,
+    UnsignedRightShift,
+    Named(Ident),
+}
+
+#[derive(Debug)]
+pub enum UnaryOperator {
+    Not,
+    BitwiseNot,
+    Negate,
+    Plus,
+}
+
+#[derive(Debug)]
 pub enum Expression {
     Resolve(Ident),
     DotAccess(Box<Expression>, Ident),
     BracketAccess(Box<Expression>, Box<Expression>),
     Vector(Vec<bool>),
     Integer(usize),
-    BinaryExpression(Ident, Box<Expression>, Box<Expression>),
     Nested(Box<Expression>, Ident),
     Binary(Box<Expression>, Vec<BinaryTail>),
-    Unary(Ident, Box<Expression>),
+    Unary(UnaryOperator, Box<Expression>),
     TypeAccess(Box<TypeReference>, Ident),
 }
 
 #[derive(Debug)]
 pub struct BinaryTail {
-    pub operation: Ident,
+    pub operation: BinaryOperator,
     pub expression: Expression,
 }
 
