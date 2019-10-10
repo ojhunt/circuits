@@ -112,18 +112,14 @@ UnaryExpr : Expression = {
     <op: UnaryOperator> <e: MemberExpression> => Expression::Unary(op, Box::new(e))
 }
 
-BinaryTail : BinaryTail = {
-    <op:BinaryOperator> <e: UnaryExpr> => BinaryTail{operation: op, expression: e}
-}
-
 pub Expr : Expression = {
     <expr: UnaryExpr> => expr,
-    <expr: UnaryExpr> <tail: (<BinaryTail>)+> => Expression::Binary(Box::new(expr), tail),
+    <left: UnaryExpr> <op: BinaryOperator> <right: Expr> => Expression::Binary(op, Box::new(left), Box::new(right)),
 }
 
 pub Declaration : Declaration = {
     Circuit => Declaration::Circuit(Box::new(<>)),
-    "type" <id:TypeName> <parameters: ("<" <Comma<TypeParameter>> ">")?> "=" <ty: TypeReference> => Declaration::TypeAlias(id, parameters.unwrap_or(Vec::new()), ty)
+    "type" <id:TypeName> <parameters: ("<" <Comma<TypeParameter>> ">")?> "=" <ty: TypeReference> => Declaration::TypeAlias(id, parameters.unwrap_or(Vec::new()), ty),
 }
 
 pub Module : Module = {

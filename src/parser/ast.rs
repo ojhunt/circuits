@@ -57,15 +57,9 @@ pub enum Expression {
     Vector(Vec<bool>),
     Integer(usize),
     Nested(Box<Expression>, Ident),
-    Binary(Box<Expression>, Vec<BinaryTail>),
+    Binary(BinaryOperator, Box<Expression>, Box<Expression>),
     Unary(UnaryOperator, Box<Expression>),
     TypeAccess(Box<TypeReference>, Ident),
-}
-
-#[derive(Debug)]
-pub struct BinaryTail {
-    pub operation: BinaryOperator,
-    pub expression: Expression,
 }
 
 #[derive(Debug)]

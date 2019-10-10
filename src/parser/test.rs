@@ -71,19 +71,19 @@ mod test {
         "circuit Foo<A:Int>{
             type F<i:Foo> = Foo<(i), A>
         }",
-        "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"Int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [TypeParameter { name: Ident(\"i\"), constraints: Some(Resolve(Ident(\"Foo\"))) }], Apply(Resolve(Ident(\"Foo\")), [Value(Binary(Resolve(Ident(\"i\")), [])), Type(Resolve(Ident(\"A\")))]))] }"
+        "Circuit { name: Ident(\"Foo\"), parameters: [TypeParameter { name: Ident(\"A\"), constraints: Some(Resolve(Ident(\"Int\"))) }], declarations: [TypeAlias(Ident(\"F\"), [TypeParameter { name: Ident(\"i\"), constraints: Some(Resolve(Ident(\"Foo\"))) }], Apply(Resolve(Ident(\"Foo\")), [Value(Resolve(Ident(\"i\"))), Type(Resolve(Ident(\"A\")))]))] }"
     );
     parser_test!(
         test_basic_expression,
         circuit_parser::ExprParser,
         "a < b",
-        "Binary(Resolve(Ident(\"a\")), [BinaryTail { operation: Ident(\"<\"), expression: Resolve(Ident(\"b\")) }])"
+        "Binary(Less, Resolve(Ident(\"a\")), Resolve(Ident(\"b\")))"
     );
     parser_test!(
         test_basic_unary_expression,
         circuit_parser::ExprParser,
-        "* b",
-        "Unary(Ident(\"*\"), Resolve(Ident(\"b\")))"
+        "+ b",
+        "Unary(Plus, Resolve(Ident(\"b\")))"
     );
 
     parser_test!(
@@ -96,19 +96,19 @@ mod test {
         paren_plus_test,
         circuit_parser::ExprParser,
         "(b+a)",
-        "Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"+\"), expression: Resolve(Ident(\"a\")) }])"
+        "Binary(Plus, Resolve(Ident(\"b\")), Resolve(Ident(\"a\")))"
     );
     parser_test!(
         lt_test,
         circuit_parser::ExprParser,
         "b<a+a",
-        "Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"<\"), expression: Resolve(Ident(\"a\")) }, BinaryTail { operation: Ident(\"+\"), expression: Resolve(Ident(\"a\")) }])"
+        "Binary(Less, Resolve(Ident(\"b\")), Binary(Plus, Resolve(Ident(\"a\")), Resolve(Ident(\"a\"))))"
     );
     parser_test!(
         ltgt_test,
         circuit_parser::ExprParser,
         "b<a>+a",
-        "Binary(Resolve(Ident(\"b\")), [BinaryTail { operation: Ident(\"<\"), expression: Resolve(Ident(\"a\")) }, BinaryTail { operation: Ident(\">\"), expression: Unary(Ident(\"+\"), Resolve(Ident(\"a\"))) }])"
+        "Binary(Less, Resolve(Ident(\"b\")), Binary(Greater, Resolve(Ident(\"a\")), Unary(Plus, Resolve(Ident(\"a\")))))"
     );
     #[test]
     pub fn circuit_test() {
